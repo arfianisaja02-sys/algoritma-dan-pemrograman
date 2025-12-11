@@ -1,207 +1,195 @@
-from tkinter import *
-from tkinter import ttk
-import tkinter.messagebox
+import copy
+import math
+import tkinter as tk
+from tkinter import messagebox
 
-root=Tk()
-root.title("Tic Tac Toe")
-#add Buttons
-bu1=ttk.Button(root,text=' ')
-bu1.grid(row=0,column=0,sticky='snew',ipadx=40,ipady=40)
-bu1.config(command=lambda: ButtonClick(1))
+X = "X"
+O = "O"
+EMPTY = None
 
-bu2=ttk.Button(root,text=' ')
-bu2.grid(row=0,column=1,sticky='snew',ipadx=40,ipady=40)
-bu2.config(command=lambda: ButtonClick(2))
+def initial_state():
+    return [[EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, EMPTY]]
 
-bu3=ttk.Button(root,text=' ')
-bu3.grid(row=0,column=2,sticky='snew',ipadx=40,ipady=40)
-bu3.config(command=lambda: ButtonClick(3))
+def player(board):
+    count = 0
+    for i in board:
+        for j in i:
+            if j:
+                count += 1
+    if count % 2 != 0:
+        return O
+    return X
 
-bu4=ttk.Button(root,text=' ')
-bu4.grid(row=1,column=0,sticky='snew',ipadx=40,ipady=40)
-bu4.config(command=lambda: ButtonClick(4))
+def actions(board):
+    return res
 
-bu5=ttk.Button(root,text=' ')
-bu5.grid(row=1,column=1,sticky='snew',ipadx=40,ipady=40)
-bu5.config(command=lambda: ButtonClick(5))
+def result(board, action):
+    curr_player = player(board)
+    result_board = copy.deepcopy(board)
+    (i, j) = action
+    result_board[i][j] = curr_player
+    return result_board
 
-bu6=ttk.Button(root,text=' ')
-bu6.grid(row=1,column=2,sticky='snew',ipadx=40,ipady=40)
-bu6.config(command=lambda: ButtonClick(6))
+def get_horizontal_winner(board):
+    winner_val = None
+    for i in range(3):
+        winner_val = board[i][0]
+        for j in range(3):
+            if board[i][j] != winner_val:
+                winner_val = None
+        if winner_val:
+            return winner_val
+    return winner_val
 
-bu7=ttk.Button(root,text=' ')
-bu7.grid(row=2,column=0,sticky='snew',ipadx=40,ipady=40)
-bu7.config(command=lambda: ButtonClick(7))
+def get_vertical_winner(board):
+    winner_val = None
+    for i in range(3):
+        winner_val = board[0][i]
+        for j in range(3):
+            if board[j][i] != winner_val:
+                winner_val = None
+        if winner_val:
+            return winner_val
+    return winner_val
 
-bu8=ttk.Button(root,text=' ')
-bu8.grid(row=2,column=1,sticky='snew',ipadx=40,ipady=40)
-bu8.config(command=lambda: ButtonClick(8))
+def get_diagonal_winner(board):
+    winner_val = board[0][0]
+    for i in range(3):
+        if board[i][i] != winner_val:
+            winner_val = None
+    if winner_val:
+        return winner_val
+    winner_val = board[0][2]
+    for i in range(3):
+        if board[i][2 - i] != winner_val:
+            winner_val = None
+    return winner_val
 
-bu9=ttk.Button(root,text=' ')
-bu9.grid(row=2,column=2,sticky='snew',ipadx=40,ipady=40)
-bu9.config(command=lambda: ButtonClick(9))
+def winner(board):
+    return get_horizontal_winner(board) or get_vertical_winner(board) or get_diagonal_winner(board) or None
 
-playerturn=ttk.Label(root,text="   Player 1 turn!  ")
-playerturn.grid(row=3,column=0,sticky='snew',ipadx=40,ipady=40)
+def terminal(board):
+    if winner(board) != None:
+        return True
+    for i in board:
+        for j in i:
+            if j == EMPTY:
+                return False
+    return True
 
-playerdetails=ttk.Label(root,text="    Player 1 is X\n\n    Player 2 is O")
-playerdetails.grid(row=3,column=2,sticky='snew',ipadx=40,ipady=40)
+def utility(board):
+    winner_val = winner(board)
+    if winner_val == X:
+        return 1
+    elif winner_val == O:
+        return -1
+    return 0
 
-res=ttk.Button(root,text='Restart')
-res.grid(row=3,column=1,sticky='snew',ipadx=40,ipady=40)
-res.config(command=lambda: restartbutton())
+def minimax(board, alpha, beta):
+    if terminal(board):
+        return None
+    curr_player = player(board)
+    if curr_player == X:
+        v = -math.inf
+        best_action = None
+        for action in actions(board):
+            new_v = min_value(result(board, action), alpha, beta)
+            if new_v > v:
+                v = new_v
+                best_action = action
+            if v >= beta:
+                break
+            alpha = max(alpha, v)
+        return best_action
+    else:
+        v = math.inf
+        best_action = None
+        for action in actions(board):
+            new_v = max_value(result(board, action), alpha, beta)
+            if new_v < v:
+                v = new_v
+                best_action = action
+            if v <= alpha:
+                break
+            beta = min(beta, v)
+        return best_action
 
-a=1
-b=0
-c=0
-def restartbutton():
-    global a,b,c
-    a=1
-    b=0
-    c=0
-    playerturn['text']="   Player 1 turn!   "
-    bu1['text']=' '
-    bu2['text']=' '
-    bu3['text']=' '
-    bu4['text']=' '
-    bu5['text']=' '
-    bu6['text']=' '
-    bu7['text']=' '
-    bu8['text']=' '
-    bu9['text']=' '
-    bu1.state(['!disabled'])
-    bu2.state(['!disabled'])
-    bu3.state(['!disabled'])
-    bu4.state(['!disabled'])
-    bu5.state(['!disabled'])
-    bu6.state(['!disabled'])
-    bu7.state(['!disabled'])
-    bu8.state(['!disabled'])
-    bu9.state(['!disabled'])
-    
-#after getting result(win or loss or draw) disable button
-def disableButton():
-    bu1.state(['disabled'])
-    bu2.state(['disabled'])
-    bu3.state(['disabled'])
-    bu4.state(['disabled'])
-    bu5.state(['disabled'])
-    bu6.state(['disabled'])
-    bu7.state(['disabled'])
-    bu8.state(['disabled'])
-    bu9.state(['disabled'])
+def max_value(board, alpha, beta):
+    if terminal(board):
+        return utility(board)
+    v = -math.inf
+    for action in actions(board):
+        v = max(v, min_value(result(board, action), alpha, beta))
+        if v >= beta:
+            return v
+        alpha = max(alpha, v)
+    return v
 
+def min_value(board, alpha, beta):
+    if terminal(board):
+        return utility(board)
+    v = math.inf
+    for action in actions(board):
+        v = min(v, max_value(result(board, action), alpha, beta))
+        if v <= alpha:
+            return v
+        beta = min(beta, v)
+    return v
 
-def ButtonClick(id):
-    global a,b,c
-    print("ID:{}".format(id))
+class TicTacToeGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Tic Tac Toe")
+        self.root.configure(bg='light blue')
+        self.board = initial_state()
+        self.buttons = [[None for _ in range(3)] for _ in range(3)]
+        self.create_buttons()
+        self.update_buttons()
 
-    #for player 1 turn
-    if id==1 and bu1['text']==' ' and a==1:
-        bu1['text']="X"
-        a=0
-        b+=1
-    if id==2 and bu2['text']==' ' and a==1:
-        bu2['text']="X"
-        a=0
-        b+=1
-    if id==3 and bu3['text']==' ' and a==1:
-        bu3['text']="X"
-        a=0
-        b+=1
-    if id==4 and bu4['text']==' ' and a==1:
-        bu4['text']="X"
-        a=0
-        b+=1
-    if id==5 and bu5['text']==' ' and a==1:
-        bu5['text']="X"
-        a=0
-        b+=1
-    if id==6 and bu6['text']==' ' and a==1:
-        bu6['text']="X"
-        a=0
-        b+=1
-    if id==7 and bu7['text']==' ' and a==1:
-        bu7['text']="X"
-        a=0
-        b+=1
-    if id==8 and bu8['text']==' ' and a==1:
-        bu8['text']="X"
-        a=0
-        b+=1
-    if id==9 and bu9['text']==' ' and a==1:
-        bu9['text']="X"
-        a=0
-        b+=1
-    #for player 2 turn
-    if id==1 and bu1['text']==' ' and a==0:
-        bu1['text']="O"
-        a=1
-        b+=1
-    if id==2 and bu2['text']==' ' and a==0:
-        bu2['text']="O"
-        a=1
-        b+=1
-    if id==3 and bu3['text']==' ' and a==0:
-        bu3['text']="O"
-        a=1
-        b+=1
-    if id==4 and bu4['text']==' ' and a==0:
-        bu4['text']="O"
-        a=1
-        b+=1
-    if id==5 and bu5['text']==' ' and a==0:
-        bu5['text']="O"
-        a=1
-        b+=1
-    if id==6 and bu6['text']==' ' and a==0:
-        bu6['text']="O"
-        a=1
-        b+=1
-    if id==7 and bu7['text']==' ' and a==0:
-        bu7['text']="O"
-        a=1
-        b+=1
-    if id==8 and bu8['text']==' ' and a==0:
-        bu8['text']="O"
-        a=1
-        b+=1
-    if id==9 and bu9['text']==' ' and a==0:
-        bu9['text']="O"
-        a=1
-        b+=1
-        
-    #checking for winner   
-    if( bu1['text']=='X' and bu2['text']=='X' and bu3['text']=='X' or
-        bu4['text']=='X' and bu5['text']=='X' and bu6['text']=='X' or
-        bu7['text']=='X' and bu8['text']=='X' and bu9['text']=='X' or
-        bu1['text']=='X' and bu4['text']=='X' and bu7['text']=='X' or
-        bu2['text']=='X' and bu5['text']=='X' and bu8['text']=='X' or
-        bu3['text']=='X' and bu6['text']=='X' and bu9['text']=='X' or
-        bu1['text']=='X' and bu5['text']=='X' and bu9['text']=='X' or
-        bu3['text']=='X' and bu5['text']=='X' and bu7['text']=='X'):
-            disableButton()
-            c=1
-            tkinter.messagebox.showinfo("Tic Tac Toe","Winner is player 1")
-    elif( bu1['text']=='O' and bu2['text']=='O' and bu3['text']=='O' or
-        bu4['text']=='O' and bu5['text']=='O' and bu6['text']=='O' or
-        bu7['text']=='O' and bu8['text']=='O' and bu9['text']=='O' or
-        bu1['text']=='O' and bu4['text']=='O' and bu7['text']=='O' or
-        bu2['text']=='O' and bu5['text']=='O' and bu8['text']=='O' or
-        bu3['text']=='O' and bu6['text']=='O' and bu9['text']=='O' or
-        bu1['text']=='O' and bu5['text']=='O' and bu9['text']=='O' or
-        bu3['text']=='O' and bu5['text']=='O' and bu7['text']=='O'):
-            disableButton()
-            c=1
-            tkinter.messagebox.showinfo("Tic Tac Toe","Winner is player 2")
-    elif b==9:
-            disableButton()
-            c=1
-            tkinter.messagebox.showinfo("Tic Tac Toe","Match is Draw.")
+    def create_buttons(self):
+        for i in range(3):
+            for j in range(3):
+                button = tk.Button(self.root, text='', font=('normal', 40), width=5, height=2, bg='light blue', command=lambda row=i, col=j: self.on_button_click(row, col))
+                button.grid(row=i, column=j)
+                self.buttons[i][j] = button
 
-    if a==1 and c==0:
-        playerturn['text']="   Player 1 turn!   "
-    elif a==0 and c==0:
-        playerturn['text']="   Player 2 turn!   "
-            
-root.mainloop()
+    def on_button_click(self, row, col):
+        if self.board[row][col] == EMPTY and not terminal(self.board):
+            self.board = result(self.board, (row, col))
+            self.update_buttons()
+            if terminal(self.board):
+                self.end_game()
+                return
+            self.board = result(self.board, minimax(self.board, -math.inf, math.inf))
+            self.update_buttons()
+            if terminal(self.board):
+                self.end_game()
+
+    def update_buttons(self):
+        for i in range(3):
+            for j in range(3):
+                if self.board[i][j] == X:
+                    self.buttons[i][j].config(text='X', state='disabled')
+                elif self.board[i][j] == O:
+                    self.buttons[i][j].config(text='O', state='disabled')
+                else:
+                    self.buttons[i][j].config(text='', state='normal')
+
+    def end_game(self):
+        winner_val = winner(self.board)
+        if winner_val:
+            messagebox.showinfo("Game Over", f"Winner: {winner_val}")
+        else:
+            messagebox.showinfo("Game Over", "It's a tie!")
+        self.reset_board()
+
+    def reset_board(self):
+        self.board = initial_state()
+        self.update_buttons()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    game = TicTacToeGUI(root)
+    root.mainloop()
